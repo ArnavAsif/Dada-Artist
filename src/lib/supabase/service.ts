@@ -326,12 +326,13 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
+  let dbSuccess = false;
   if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminSupabaseClient() || (await createServerSupabaseClient());
       if (supabase) {
         const { error } = await supabase.from('products').delete().eq('id', id);
-        if (!error) return true;
+        if (!error) dbSuccess = true;
         if (error) console.error('Supabase delete error:', error);
       }
     } catch (err) {
@@ -343,7 +344,7 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   const initialLen = store.products.length;
   store.products = store.products.filter((p) => p.id !== id);
   writeLocalStore(store);
-  return store.products.length < initialLen;
+  return dbSuccess || store.products.length < initialLen;
 };
 
 export const updateHotspotPosition = async (

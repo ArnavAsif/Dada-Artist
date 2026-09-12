@@ -56,64 +56,6 @@
       "slug": "botanica-gilded-3d-floral-wall-relief"
     },
     {
-      "id": "indigo-velvet-loveseat",
-      "title": "Aria Indigo Stone-Washed Velvet Loveseat",
-      "subtitle": "Deep Double-Cushion Seating in Belgian Linen",
-      "category": "Living Room Seating",
-      "price": 3850,
-      "originalPrice": 4200,
-      "currency": "USD",
-      "image": "/products/indigo-velvet-loveseat.png",
-      "description": "Generously proportioned two-seater sofa upholstered in antiqued indigo Belgian linen velvet. Tailored with architectural track arms, goose down-wrapped core cushions, and tapered walnut block feet.",
-      "story": "Each sofa undergoes an artisanal stone-washing process that creates a bespoke celestial patina across the indigo velvet. The frame is hand-joined from kiln-dried European FSC beech hardwood with eight-way hand-tied springs.",
-      "specs": [
-        {
-          "label": "Overall Dimensions",
-          "value": "172 cm W × 92 cm D × 84 cm H"
-        },
-        {
-          "label": "Seat Height",
-          "value": "46 cm"
-        },
-        {
-          "label": "Seat Depth",
-          "value": "62 cm"
-        },
-        {
-          "label": "Upholstery",
-          "value": "100% Belgian Washed Linen Velvet"
-        },
-        {
-          "label": "Suspension",
-          "value": "8-Way Hand-Tied Steel Coil Springs"
-        },
-        {
-          "label": "Frame",
-          "value": "FSC-Certified Solid European Beech"
-        }
-      ],
-      "materials": [
-        "Belgian Linen Velvet",
-        "Goose Down Blend",
-        "Solid European Beech",
-        "Cast Brass Glides"
-      ],
-      "dimensions": "172 cm × 92 cm × 84 cm",
-      "stock": 2,
-      "leadTime": "In Stock • Atelier White-Glove Delivery",
-      "badge": "Masterwork Piece",
-      "spatialTag": "Salon Main Seating • Floor Datum",
-      "hotspot": {
-        "x": 34.5,
-        "y": 54.8,
-        "width": 34.2,
-        "height": 37.4,
-        "zIndex": 10
-      },
-      "sort_order": 2,
-      "active": true
-    },
-    {
       "id": "rattan-floor-lamp",
       "title": "Solstice Handwoven Fringe Floor Lamp",
       "subtitle": "Architectural Blackened Steel with Conical Rattan Shade",
@@ -552,59 +494,6 @@
         "zIndex": 20
       },
       "sort_order": 11,
-      "active": true
-    },
-    {
-      "id": "isfahan-heirloom-rug",
-      "title": "Isfahan Hand-Knotted Heritage Wool Rug",
-      "subtitle": "Vegetable-Dyed Persian Knotwork with Geometric Medallion",
-      "category": "Heirloom Floor Textiles",
-      "price": 2750,
-      "originalPrice": 3100,
-      "currency": "USD",
-      "image": "/products/isfahan-heirloom-rug.png",
-      "description": "Heirloom masterwork area rug featuring a central diamond medallion surrounded by nomadic zoomorphic motifs in saffron, deep indigo, burnt sienna, and sage green vegetable dyes.",
-      "story": "Over 400 hours of single-needle hand-knotting by master weavers using handspun high-plateau highland wool. Each knot is individually sheared to create a silky, durable low-pile texture.",
-      "specs": [
-        {
-          "label": "Dimensions",
-          "value": "245 cm L × 165 cm W (Approx. 8.0 ft × 5.4 ft)"
-        },
-        {
-          "label": "Knot Density",
-          "value": "320 Knots per Square Inch (KPSI)"
-        },
-        {
-          "label": "Pile Height",
-          "value": "8 mm Low-Profile Velvet Hand"
-        },
-        {
-          "label": "Dyes",
-          "value": "100% Organic Indigo, Madder Root, Saffron, Walnut Husk"
-        },
-        {
-          "label": "Fringe",
-          "value": "Hand-Finished Unbleached Cotton Fringe"
-        }
-      ],
-      "materials": [
-        "Highland Handspun Wool",
-        "Vegetable Dyes",
-        "Organic Cotton Warp & Weft"
-      ],
-      "dimensions": "245 cm × 165 cm",
-      "stock": 1,
-      "leadTime": "Unique Masterwork • Dispatched in Climate-Proof Box",
-      "badge": "One of a Kind",
-      "spatialTag": "Salon Floor Centerpiece • 4.0 m²",
-      "hotspot": {
-        "x": 42.8,
-        "y": 82.2,
-        "width": 47.4,
-        "height": 17.6,
-        "zIndex": 5
-      },
-      "sort_order": 12,
       "active": true
     }
   ]

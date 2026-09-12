@@ -66,10 +66,20 @@ const ShowroomContext = createContext<ShowroomContextType | undefined>(undefined
 
 const CART_STORAGE_KEY = 'fea_showroom_cart_v1';
 
-export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Dynamic Catalog state with immediate local fallback
-  const [products, setProducts] = useState<Product[]>(SHOWROOM_PRODUCTS);
-  const [heroImageUrl, setHeroImageUrl] = useState<string>('/images/hero-room.png');
+export interface ShowroomProviderProps {
+  children: React.ReactNode;
+  initialProducts?: Product[];
+  initialHeroImageUrl?: string;
+}
+
+export const ShowroomProvider: React.FC<ShowroomProviderProps> = ({
+  children,
+  initialProducts,
+  initialHeroImageUrl,
+}) => {
+  // Initialize with exact server data (avoids flashing old 12 products on reload)
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [heroImageUrl, setHeroImageUrl] = useState<string>(initialHeroImageUrl ?? '/images/hero-room.png');
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sourceRect, setSourceRect] = useState<DOMRect | null>(null);
@@ -94,20 +104,23 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         fetch('/api/hero-settings').then((r) => r.json()),
       ]);
 
-      if (productsRes.success && Array.isArray(productsRes.products) && productsRes.products.length > 0) {
+      if (productsRes.success && Array.isArray(productsRes.products)) {
         setProducts(productsRes.products);
       }
       if (heroRes.success && heroRes.settings?.hero_image_url) {
         setHeroImageUrl(heroRes.settings.hero_image_url);
       }
     } catch (err) {
-      console.warn('Showroom dynamic data fetch notice, using cached products:', err);
+      console.warn('Showroom dynamic data fetch notice:', err);
     }
   }, []);
 
+  // If initialProducts was not passed by server, fetch immediately on client
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    if (!initialProducts) {
+      refreshData();
+    }
+  }, [initialProducts, refreshData]);
 
   // Supabase Realtime subscription
   useEffect(() => {
