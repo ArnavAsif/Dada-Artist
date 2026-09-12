@@ -14,18 +14,42 @@ export const ProductHotspot: React.FC<ProductHotspotProps> = ({ product }) => {
   const { openProduct, setHoveredProduct, hotspotsVisible, selectedProduct } = useShowroom();
   const hotspotRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isDraggingRef = useRef(false);
 
   // If this product is currently the open modal, keep it transparent to avoid visual duplication
   const isSelected = selectedProduct?.id === product.id;
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current) return;
+    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+    if (dx > 8 || dy > 8) {
+      isDraggingRef.current = true;
+      setIsHovered(false);
+      setHoveredProduct(null);
+    }
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      return;
+    }
     if (!hotspotRef.current) return;
     const rect = hotspotRef.current.getBoundingClientRect();
     openProduct(product, rect);
   };
 
   const handleMouseEnter = () => {
+    // Only show hover state if window is desktop size
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
     setIsHovered(true);
     setHoveredProduct(product);
     sounds.playHover();
@@ -44,6 +68,8 @@ export const ProductHotspot: React.FC<ProductHotspotProps> = ({ product }) => {
     <div
       ref={hotspotRef}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       role="button"
@@ -129,7 +155,7 @@ export const ProductHotspot: React.FC<ProductHotspotProps> = ({ product }) => {
 
       {/* Minimal Floating Preview Tag on Hover */}
       <div
-        className={`absolute pointer-events-none z-50 transition-all duration-300 ease-out transform ${
+        className={`absolute pointer-events-none z-50 transition-all duration-300 ease-out transform hidden md:block ${
           isHovered
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 scale-95 pointer-events-none ' + (isTopHalf ? '-translate-y-2' : 'translate-y-2')

@@ -24,7 +24,7 @@ export const ShowroomClientApp: React.FC<ShowroomClientAppProps> = ({
       initialProducts={initialProducts}
       initialHeroImageUrl={initialHeroImageUrl}
     >
-      <main className="relative w-screen h-screen overflow-hidden bg-[#090807] flex flex-col items-center justify-center">
+      <main className="relative w-screen h-screen h-[100dvh] overflow-hidden bg-[#090807] flex flex-col items-center justify-center">
         {/* 1. Minimal Navigation (Logo, Atmosphere HUD, Cart Bag, Hamburger) */}
         <MinimalNav />
 
