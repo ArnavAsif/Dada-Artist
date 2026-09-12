@@ -101,7 +101,11 @@ export const FlyingProductProxy: React.FC = () => {
     >
       <div className="relative w-full h-full p-2">
         <Image
-          src={flyingProduct.product.image}
+          src={
+            flyingProduct.product.image && !flyingProduct.product.image.includes('hero-room.png')
+              ? flyingProduct.product.image
+              : `/api/crop?productId=${flyingProduct.product.id}&x=${flyingProduct.product.hotspot.x}&y=${flyingProduct.product.hotspot.y}&w=${flyingProduct.product.hotspot.width}&h=${flyingProduct.product.hotspot.height}`
+          }
           alt={flyingProduct.product.title}
           fill
           sizes="120px"

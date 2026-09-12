@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from './client';
 import { createAdminSupabaseClient } from './admin';
 import { createServerSupabaseClient } from './server';
 import { Database } from './database.types';
+import { cropHeroImage } from '../crop';
 
 export type DatabaseProductRow = Database['public']['Tables']['products']['Row'];
 
@@ -58,6 +59,17 @@ const writeLocalStore = (data: LocalStoreData) => {
 
 // Map DB Row to Product Frontend Model
 export const mapRowToProduct = (row: DatabaseProductRow): Product => {
+  const hotspotX = Number(row.hotspot_x);
+  const hotspotY = Number(row.hotspot_y);
+  const hotspotW = Number(row.hotspot_width);
+  const hotspotH = Number(row.hotspot_height);
+
+  // If no product image is provided, display that default image in a cropped format instead
+  let image = row.image_url;
+  if (!image || image.trim() === '' || image === '/images/hero-room.png') {
+    image = `/api/crop?productId=${row.id}&x=${hotspotX}&y=${hotspotY}&w=${hotspotW}&h=${hotspotH}`;
+  }
+
   return {
     id: row.id,
     title: row.title,
@@ -67,7 +79,7 @@ export const mapRowToProduct = (row: DatabaseProductRow): Product => {
     price: Number(row.price),
     originalPrice: row.original_price ? Number(row.original_price) : undefined,
     currency: row.currency || 'USD',
-    image: row.image_url,
+    image,
     description: row.description,
     story: row.story || '',
     specs: Array.isArray(row.specs) ? (row.specs as any) : [],
@@ -80,10 +92,10 @@ export const mapRowToProduct = (row: DatabaseProductRow): Product => {
     active: row.active,
     sort_order: row.sort_order,
     hotspot: {
-      x: Number(row.hotspot_x),
-      y: Number(row.hotspot_y),
-      width: Number(row.hotspot_width),
-      height: Number(row.hotspot_height),
+      x: hotspotX,
+      y: hotspotY,
+      width: hotspotW,
+      height: hotspotH,
       zIndex: row.z_index ?? 10,
     },
   };
@@ -182,6 +194,31 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
     productData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') ||
     id;
 
+  const hotspot = {
+    x: productData.hotspot?.x ?? 50,
+    y: productData.hotspot?.y ?? 50,
+    width: productData.hotspot?.width ?? 12,
+    height: productData.hotspot?.height ?? 18,
+    zIndex: productData.hotspot?.zIndex ?? 10,
+  };
+
+  // If no product image is provided, display that default image in a cropped format instead
+  let image = productData.image?.trim();
+  if (!image || image === '/products/botanica-relief-art.png' || image.includes('hero-room.png')) {
+    try {
+      const hero = await getHeroSettings();
+      const cropResult = await cropHeroImage({
+        coords: hotspot,
+        productId: id,
+        heroImageUrl: hero.hero_image_url,
+      });
+      image = cropResult.publicUrl;
+    } catch (cropErr) {
+      console.warn('Auto-crop generation fallback:', cropErr);
+      image = `/api/crop?productId=${id}&x=${hotspot.x}&y=${hotspot.y}&w=${hotspot.width}&h=${hotspot.height}`;
+    }
+  }
+
   const newProduct: Product = {
     id,
     title: productData.title || 'Untitled Product',
@@ -191,7 +228,7 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
     price: Number(productData.price) || 0,
     originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
     currency: productData.currency || 'USD',
-    image: productData.image || '/products/botanica-relief-art.png',
+    image: image || `/api/crop?productId=${id}&x=${hotspot.x}&y=${hotspot.y}&w=${hotspot.width}&h=${hotspot.height}`,
     description: productData.description || '',
     story: productData.story || '',
     specs: productData.specs || [],
@@ -203,16 +240,10 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
     spatialTag: productData.spatialTag || 'Living Salon',
     active: productData.active !== undefined ? productData.active : true,
     sort_order: productData.sort_order ?? 99,
-    hotspot: {
-      x: productData.hotspot?.x ?? 50,
-      y: productData.hotspot?.y ?? 50,
-      width: productData.hotspot?.width ?? 12,
-      height: productData.hotspot?.height ?? 18,
-      zIndex: productData.hotspot?.zIndex ?? 10,
-    },
+    hotspot,
   };
 
-    if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminSupabaseClient() || (await createServerSupabaseClient());
       if (supabase) {
@@ -236,6 +267,25 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
 };
 
 export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product | null> => {
+  const store = readLocalStore();
+  const existing = store.products.find((p) => p.id === id);
+
+  // If image is explicitly set to empty or default hero image, generate cropped default image
+  if (productData.image !== undefined && (!productData.image.trim() || productData.image.includes('hero-room.png'))) {
+    const coords = productData.hotspot || existing?.hotspot || { x: 50, y: 50, width: 12, height: 18 };
+    try {
+      const hero = await getHeroSettings();
+      const cropResult = await cropHeroImage({
+        coords,
+        productId: id,
+        heroImageUrl: hero.hero_image_url,
+      });
+      productData.image = cropResult.publicUrl;
+    } catch (cropErr) {
+      productData.image = `/api/crop?productId=${id}&x=${coords.x}&y=${coords.y}&w=${coords.width}&h=${coords.height}`;
+    }
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminSupabaseClient() || (await createServerSupabaseClient());
@@ -257,16 +307,15 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
   }
 
   // Update local store
-  const store = readLocalStore();
   const index = store.products.findIndex((p) => p.id === id);
   if (index === -1) return null;
 
-  const existing = store.products[index];
+  const currentProduct = store.products[index];
   const updated: Product = {
-    ...existing,
+    ...currentProduct,
     ...productData,
     hotspot: {
-      ...existing.hotspot,
+      ...currentProduct.hotspot,
       ...(productData.hotspot || {}),
     },
   };
@@ -301,18 +350,40 @@ export const updateHotspotPosition = async (
   id: string,
   coords: HotspotCoordinates
 ): Promise<boolean> => {
+  const store = readLocalStore();
+  const product = store.products.find((p) => p.id === id);
+
+  // If this product was auto-cropped from the default scene image, re-crop it with the updated position
+  if (product && (!product.image || product.image.includes('/api/crop') || product.image.includes(`/${id}.png`))) {
+    try {
+      const hero = await getHeroSettings();
+      const cropResult = await cropHeroImage({
+        coords,
+        productId: id,
+        heroImageUrl: hero.hero_image_url,
+      });
+      product.image = cropResult.publicUrl;
+    } catch (cropErr) {
+      console.warn('Auto-recrop on hotspot position update failed:', cropErr);
+    }
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminSupabaseClient() || (await createServerSupabaseClient());
       if (supabase) {
+        const updatePayload: any = {
+          hotspot_x: coords.x,
+          hotspot_y: coords.y,
+          hotspot_width: coords.width,
+          hotspot_height: coords.height,
+          z_index: coords.zIndex ?? 10,
+        };
+        if (product?.image) {
+          updatePayload.image_url = product.image;
+        }
         const { error } = await (supabase.from('products') as any)
-          .update({
-            hotspot_x: coords.x,
-            hotspot_y: coords.y,
-            hotspot_width: coords.width,
-            hotspot_height: coords.height,
-            z_index: coords.zIndex ?? 10,
-          })
+          .update(updatePayload)
           .eq('id', id);
         if (!error) return true;
       }
@@ -321,8 +392,6 @@ export const updateHotspotPosition = async (
     }
   }
 
-  const store = readLocalStore();
-  const product = store.products.find((p) => p.id === id);
   if (!product) return false;
 
   product.hotspot = {

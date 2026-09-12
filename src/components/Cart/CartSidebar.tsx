@@ -222,7 +222,11 @@ export const CartSidebar: React.FC = () => {
                   }}
                 >
                   <Image
-                    src={item.product.image}
+                    src={
+                      item.product.image && !item.product.image.includes('hero-room.png')
+                        ? item.product.image
+                        : `/api/crop?productId=${item.product.id}&x=${item.product.hotspot.x}&y=${item.product.hotspot.y}&w=${item.product.hotspot.width}&h=${item.product.hotspot.height}`
+                    }
                     alt={item.product.title}
                     fill
                     sizes="80px"

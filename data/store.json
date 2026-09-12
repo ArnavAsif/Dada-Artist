@@ -6,9 +6,9 @@
       "title": "Botanica Gilded 3D Floral Wall Relief",
       "subtitle": "Hand-Cast Porcelain & 24K Gold Leaf",
       "category": "Fine Wall Sculptures",
-      "price": 1445,
+      "price": 1420,
       "currency": "USD",
-      "image": "/uploads/screenshot-17-1789198880413.png",
+      "image": "/products/botanica-relief-art.png",
       "description": "A centerpiece wall sculpture capturing three blooming white botanicals in sculptural relief. Textured gold leaf accents cascade beneath the petals, framed by hand-finished brushed champagne brass.",
       "story": "Created in collaboration with Florentine master plaster artisans, each petal is hand-modeled in high-density porcelain plaster, layered over an antiqued parchment canvas with genuine 24-karat gold leaf textures.",
       "specs": [
@@ -45,15 +45,15 @@
       "badge": "Atelier Signature",
       "spatialTag": "Salon Center Wall • Elevation +1.8m",
       "hotspot": {
-        "x": 43.5,
-        "y": 17,
-        "width": 11.5,
-        "height": 31.5,
+        "x": 43.2,
+        "y": 16.8,
+        "width": 11.8,
+        "height": 31.7,
         "zIndex": 10
       },
       "sort_order": 1,
       "active": true,
-      "slug": ""
+      "slug": "botanica-gilded-3d-floral-wall-relief"
     },
     {
       "id": "indigo-velvet-loveseat",

@@ -266,9 +266,14 @@ export default function AdminProductsPage() {
                         <div className="flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-lg bg-stone-900 border border-white/10 overflow-hidden shrink-0">
                             <Image
-                              src={product.image}
+                              src={
+                                product.image && !product.image.includes('hero-room.png')
+                                  ? product.image
+                                  : `/api/crop?productId=${product.id}&x=${product.hotspot.x}&y=${product.hotspot.y}&w=${product.hotspot.width}&h=${product.hotspot.height}`
+                              }
                               alt={product.title}
                               fill
+                              unoptimized={!product.image || product.image.includes('hero-room.png') || product.image.startsWith('/api/crop')}
                               sizes="48px"
                               className="object-contain p-1"
                             />

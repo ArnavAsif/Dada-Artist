@@ -147,10 +147,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isNew = f
       setStatusMessage({ text: 'Product title is required.', type: 'error' });
       return;
     }
-    if (!imageUrl) {
-      setStatusMessage({ text: 'Please upload or provide a product image.', type: 'error' });
-      return;
-    }
 
     setSaving(true);
     setStatusMessage(null);
@@ -489,9 +485,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isNew = f
                   className="object-contain p-4"
                 />
               ) : (
-                <div className="text-center p-6 text-stone-500 text-xs">
-                  <ImageIcon size={32} className="mx-auto mb-2 opacity-40" />
-                  <span>No image uploaded yet</span>
+                <div className="relative w-full h-full flex flex-col items-center justify-center p-3 text-center">
+                  <Image
+                    src={`/api/crop?x=${hotspotX}&y=${hotspotY}&w=${hotspotW}&h=${hotspotH}`}
+                    alt="Scene crop preview"
+                    fill
+                    unoptimized
+                    sizes="320px"
+                    className="object-contain p-3"
+                  />
+                  <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-amber-300 border border-amber-400/30">
+                    Scene Auto-Crop
+                  </div>
                 </div>
               )}
 
@@ -513,27 +518,44 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isNew = f
             />
 
             <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="w-full py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-stone-200 hover:text-white text-xs font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <Upload size={14} className="text-amber-400" />
-                <span>{imageUrl ? 'Replace Image' : 'Upload Image'}</span>
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-stone-200 hover:text-white text-xs font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Upload size={14} className="text-amber-400" />
+                  <span>{imageUrl ? 'Replace Custom Image' : 'Upload Custom Image'}</span>
+                </button>
+
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl('')}
+                    className="px-3 py-2.5 rounded-xl border border-white/10 bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-mono transition-colors"
+                    title="Revert to auto-cropped scene image"
+                  >
+                    Auto-Crop
+                  </button>
+                )}
+              </div>
 
               <div>
-                <label className="block text-[11px] text-stone-400 mb-1">Image URL</label>
+                <label className="block text-[11px] text-stone-400 mb-1">Custom Image URL (Optional)</label>
                 <input
                   type="text"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://... or /products/..."
+                  placeholder="Leave blank to use auto-crop from scene hotspot"
                   className="w-full h-8 px-3 rounded-lg bg-stone-900 border border-white/10 text-[11px] font-mono text-stone-300 focus:outline-none"
                 />
               </div>
-              <p className="text-[10px] text-stone-500">Supported: JPG, PNG, WebP, AVIF up to 12MB.</p>
+              <p className="text-[10px] text-stone-500">
+                {imageUrl
+                  ? 'Using custom uploaded photography.'
+                  : 'No custom image provided: displays the default scene image in cropped format.'}
+              </p>
             </div>
           </div>
 

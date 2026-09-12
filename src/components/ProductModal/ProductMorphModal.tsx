@@ -338,7 +338,11 @@ export const ProductMorphModal: React.FC = () => {
             <div className="relative w-full h-full max-w-[420px] max-h-[380px] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 border border-amber-400/20">
               <Image
                 ref={imageRef}
-                src={selectedProduct.image}
+                src={
+                  selectedProduct.image && !selectedProduct.image.includes('hero-room.png')
+                    ? selectedProduct.image
+                    : `/api/crop?productId=${selectedProduct.id}&x=${selectedProduct.hotspot.x}&y=${selectedProduct.hotspot.y}&w=${selectedProduct.hotspot.width}&h=${selectedProduct.hotspot.height}`
+                }
                 alt={selectedProduct.title}
                 fill
                 priority
