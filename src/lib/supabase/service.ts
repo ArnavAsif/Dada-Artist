@@ -432,19 +432,22 @@ export const checkSupabaseStatus = async () => {
     }
 
     const { count, error } = await (supabase.from('products') as any)
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact' })
+      .limit(1);
 
     if (error) {
       return {
         connected: false,
         configured: true,
-        message: `Database connection error: ${error.message}. Please run supabase/schema.sql in your Supabase SQL editor.`,
+        tablesExist: false,
+        message: `Database connected, but tables are missing: "${error.message}". Please run supabase/schema.sql in your Supabase SQL Editor.`,
       };
     }
 
     return {
       connected: true,
       configured: true,
+      tablesExist: true,
       productCount: count ?? 0,
       message: 'Connected to Supabase PostgreSQL database successfully.',
     };
@@ -469,15 +472,33 @@ export const seedSupabaseFromLocal = async () => {
     const store = readLocalStore();
 
     // 1. Seed Hero
-    await (supabase.from('hero_settings') as any).upsert({ id: 1, hero_image_url: store.hero_image_url });
+    const heroRes = await (supabase.from('hero_settings') as any).upsert({ id: 1, hero_image_url: store.hero_image_url });
+    if (heroRes.error) {
+      return {
+        success: false,
+        message: `Table hero_settings missing: "${heroRes.error.message}". Please run supabase/schema.sql in your Supabase SQL Editor first.`,
+      };
+    }
 
     // 2. Seed Products
     let count = 0;
+    let lastError = null;
     for (const product of store.products) {
       const row = mapProductToRow(product);
       const { error } = await (supabase.from('products') as any).upsert(row);
-      if (!error) count++;
-      else console.error('Error seeding row:', error);
+      if (!error) {
+        count++;
+      } else {
+        lastError = error.message;
+        console.error('Error seeding row:', error);
+      }
+    }
+
+    if (count === 0 && lastError) {
+      return {
+        success: false,
+        message: `Table products missing or error: "${lastError}". Please run supabase/schema.sql in your Supabase SQL Editor first.`,
+      };
     }
 
     return { success: true, count, message: `Successfully seeded ${count} products to Supabase!` };
