@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Product, CartItem, LightingMode } from '@/types';
+import { SHOWROOM_PRODUCTS } from '@/data/products';
 import { sounds } from '@/utils/sound';
+import { createClient } from '@/lib/supabase/client';
 
 interface FlyingProductPayload {
   product: Product;
@@ -10,6 +12,11 @@ interface FlyingProductPayload {
 }
 
 interface ShowroomContextType {
+  // Dynamic Catalog Data
+  products: Product[];
+  heroImageUrl: string;
+  refreshData: () => Promise<void>;
+
   // Product morph modal state
   selectedProduct: Product | null;
   sourceRect: DOMRect | null;
@@ -57,7 +64,13 @@ interface ShowroomContextType {
 
 const ShowroomContext = createContext<ShowroomContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = 'fea_showroom_cart_v1';
+
 export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Dynamic Catalog state with immediate local fallback
+  const [products, setProducts] = useState<Product[]>(SHOWROOM_PRODUCTS);
+  const [heroImageUrl, setHeroImageUrl] = useState<string>('/images/hero-room.png');
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sourceRect, setSourceRect] = useState<DOMRect | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -69,9 +82,84 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [lightingMode, setLightingMode] = useState<LightingMode>('warm-day');
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(false); // muted by default for luxury discretion
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [hotspotsVisible, setHotspotsVisible] = useState<boolean>(true);
   const [hoveredProduct, setHoveredProduct] = useState<Product | null>(null);
+
+  // Fetch dynamic products and hero image from Supabase / API
+  const refreshData = useCallback(async () => {
+    try {
+      const [productsRes, heroRes] = await Promise.all([
+        fetch('/api/products?activeOnly=true').then((r) => r.json()),
+        fetch('/api/hero-settings').then((r) => r.json()),
+      ]);
+
+      if (productsRes.success && Array.isArray(productsRes.products) && productsRes.products.length > 0) {
+        setProducts(productsRes.products);
+      }
+      if (heroRes.success && heroRes.settings?.hero_image_url) {
+        setHeroImageUrl(heroRes.settings.hero_image_url);
+      }
+    } catch (err) {
+      console.warn('Showroom dynamic data fetch notice, using cached products:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  // Supabase Realtime subscription
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('showroom_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => {
+          refreshData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hero_settings' },
+        () => {
+          refreshData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshData]);
+
+  // Load cart from localStorage on mount (Cart Persistence)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setCart(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load cart from storage:', e);
+    }
+  }, []);
+
+  // Persist cart changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch (e) {
+      console.error('Failed to save cart to storage:', e);
+    }
+  }, [cart]);
 
   // Sync sound manager
   useEffect(() => {
@@ -93,7 +181,6 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSourceRect(rect);
     setIsReversing(false);
     setIsModalOpen(true);
-    // Auto close cart or menu if open
     setIsCartOpen(false);
     setIsMenuOpen(false);
   }, []);
@@ -136,7 +223,6 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addToCart = useCallback((product: Product, quantity = 1, sourceImageEl?: HTMLElement | null) => {
     sounds.playAddToCart();
 
-    // Trigger flying animation proxy if source image element exists
     if (sourceImageEl) {
       const rect = sourceImageEl.getBoundingClientRect();
       setFlyingProduct({ product, startRect: rect });
@@ -154,7 +240,6 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return [{ product, quantity, addedAt: Date.now() }, ...prevCart];
     });
 
-    // Automatically slide in cart after brief delay to let flying animation arrive
     setTimeout(() => {
       setIsCartOpen(true);
     }, 450);
@@ -219,6 +304,9 @@ export const ShowroomProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <ShowroomContext.Provider
       value={{
+        products,
+        heroImageUrl,
+        refreshData,
         selectedProduct,
         sourceRect,
         isModalOpen,

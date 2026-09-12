@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { useShowroom } from '@/context/ShowroomContext';
-import { SHOWROOM_PRODUCTS } from '@/data/products';
 import { ShoppingBag, Volume2, VolumeX, SunMedium, Moon, Eye, EyeOff } from 'lucide-react';
 import { sounds } from '@/utils/sound';
 
 export const MinimalNav: React.FC = () => {
   const {
+    products,
     isMenuOpen,
     toggleMenu,
     totalCartItems,
@@ -49,7 +49,7 @@ export const MinimalNav: React.FC = () => {
           {hotspotsVisible ? (
             <>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>{SHOWROOM_PRODUCTS.length} Curations</span>
+              <span>{products.length} Curations</span>
             </>
           ) : (
             <>

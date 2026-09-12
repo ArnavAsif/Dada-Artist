@@ -4,13 +4,14 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
 import { useShowroom } from '@/context/ShowroomContext';
-import { SHOWROOM_PRODUCTS } from '@/data/products';
 import { ProductHotspot } from './ProductHotspot';
 import { Sparkles, Info, Maximize2 } from 'lucide-react';
 import { sounds } from '@/utils/sound';
 
 export const HeroRoom: React.FC = () => {
   const {
+    products,
+    heroImageUrl,
     isModalOpen,
     isReversing,
     lightingMode,
@@ -137,7 +138,7 @@ export const HeroRoom: React.FC = () => {
         {/* Main Single Hero Image */}
         <div className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl border border-white/[0.08] select-none">
           <Image
-            src="/images/hero-room.png"
+            src={heroImageUrl || "/images/hero-room.png"}
             alt="FEA Atelier Living Room Product Showroom"
             fill
             priority
@@ -150,7 +151,7 @@ export const HeroRoom: React.FC = () => {
 
           {/* Interactive Product Hotspots positioned exactly in % */}
           <div className="absolute inset-0 w-full h-full">
-            {SHOWROOM_PRODUCTS.map((product) => (
+            {products.map((product) => (
               <ProductHotspot key={product.id} product={product} />
             ))}
           </div>

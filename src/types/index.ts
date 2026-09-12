@@ -13,7 +13,9 @@ export interface ProductSpec {
 
 export interface Product {
   id: string;
+  uuid?: string;
   title: string;
+  slug?: string;
   subtitle: string;
   category: string;
   price: number;
@@ -30,6 +32,8 @@ export interface Product {
   hotspot: HotspotCoordinates;
   badge?: string;
   spatialTag: string;
+  active?: boolean;
+  sort_order?: number;
 }
 
 export interface CartItem {
